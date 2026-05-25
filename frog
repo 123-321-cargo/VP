@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 SDG 15 互動繪本：大嘴呱呱找新家</title>
+    <style>
+        /* 全域樣式設定 */
+        :root {
+            --bg-color: #3d3a31;
+            --text-color: #f5f5f0;
+            --frog-skin: #f4a261; /* 地瓜的亮橘黃色 */
+            --frog-spot: #874f26; /* 地瓜的深褐斑紋 */
+            --frog-belly: #fefae0;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: #2b2922;
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 繪本外框 */
+        .storybook-container {
+            width: 100%;
+            max-width: 680px;
+            background-color: var(--bg-color);
+            border: 8px solid #575344;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .sdg-badge {
+            background-color: #56db56;
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        /* 繪本主舞台 */
+        .illustration-stage {
+            height: 280px;
+            background: linear-gradient(to bottom, #4a473b, #24221b);
+            border-radius: 15px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px solid #1f1d17;
+            transition: background 0.8s ease;
+        }
+
+        /* 純 CSS 手繪「地瓜」角蛙造型 */
+        .frog-digua {
+            width: 150px;
+            height: 130px;
+            background-color: var(--frog-skin);
+            border-radius: 50% 50% 45% 45%;
+            position: relative;
+            box-shadow: inset -10px -10px 0px rgba(0,0,0,0.15), 0 8px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease, filter 0.5s ease;
+            bottom: -20px;
+            z-index: 10;
+        }
+
+        /* 地瓜的斑紋效果 */
+        .frog-digua::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background-color: var(--frog-spot);
+            border-radius: 50%;
+            top: 25px;
+            left: 20px;
+            box-shadow: 40px -10px 0 var(--frog-spot), 80px 0px 0 var(--frog-spot), 
+                        20px 40px 0 var(--frog-spot), 60px 40px 0 var(--frog-spot);
+        }
+
+        /* 地瓜的大嘴巴 */
+        .frog-mouth {
+            width: 110px;
+            height: 40px;
+            border-bottom: 5px solid #5c3214;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 25px;
+            left: 20px;
+            transition: all 0.3s;
+            background: transparent;
+        }
+
+        /* 地瓜的大眼睛 */
+        .frog-eye-left, .frog-eye-right {
+            width: 25px;
+            height: 25px;
+            background-color: var(--frog-skin);
+            border-radius: 50%;
+            position: absolute;
+            top: -10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .frog-eye-left { left: 25px; }
+        .frog-eye-right { right: 25px; }
+
+        .frog-eye-left::after, .frog-eye-right::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: #111;
+            border-radius: 50%;
+            top: 5px;
+            left: 5px;
+        }
+
+        /* 當眼睛死掉變成叉叉時，隱藏原本的黑眼珠 */
+        .frog-eye-left.dead-eye::after, .frog-eye-right.dead-eye::after {
+            display: none;
+        }
+
+        /* --- 道具：蠕動的麵包虫 --- */
+        .mealworm {
+            position: absolute;
+            right: -60px;
+            bottom: 35px;
+            width: 50px;
+            height: 15px;
+            background: linear-gradient(90deg, #f4d35e, #ee9b00);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            z-index: 5;
+            opacity: 0;
+        }
+        .mealworm::before { content: '🐛'; font-size: 16px; position: absolute; top:-3px;}
+
+        /* --- 動畫效果庫 --- */
+        /* 1. 麵包蟲爬過來 */
+        .worm-crawl {
+            animation: crawlIn 2s forwards ease-in-out;
+        }
+        @keyframes crawlIn {
+            0% { right: -60px; opacity: 0; transform: scaleY(1); }
+            50% { transform: scaleY(0.7) translateX(-60px); opacity: 1; }
+            100% { right: 130px; opacity: 1; transform: scaleY(1); }
+        }
+
+        /* 2. 地瓜大嘴咬下 */
+        .frog-bite {
+            animation: biteAnimation 0.4s 1.2s forwards;
+        }
+        @keyframes biteAnimation {
+            0% { transform: scaleY(1) translateY(0); }
+            50% { transform: scaleY(1.2) translateY(-15px); }
+            100% { transform: scaleY(1) translateY(0); }
+        }
+
+        /* 3. 翻肚死亡動畫 */
+        .dead-flip {
+            animation: flipOver 1.2s forwards ease-in-out;
+        }
+        @keyframes flipOver {
+            0% { transform: rotate(0) scale(1); }
+            30% { transform: rotate(-20deg) translateY(-30px); }
+            100% { transform: rotate(180deg) translateY(-20px); filter: grayscale(0.7) hue-rotate(50deg); }
+        }
+
+        /* 4. 集體快樂大遷徙跳躍 */
+        .happy-migrate {
+            animation: groupJump 0.6s infinite alternate ease-in-out;
+        }
+        @keyframes groupJump {
+            0% { transform: translateY(0) scaleX(1.05); }
+            100% { transform: translateY(-45px) scaleX(0.95); }
+        }
+
+        /* 複製青蛙部隊（同伴） */
+        .cloned-frog {
+            position: absolute;
+            transform: scale(0.6);
+            opacity: 0.9;
+            bottom: -20px;
+            display: none;
+            z-index: 9;
+        }
+
+        /* 環境裝飾 */
+        .trash-item { position: absolute; font-size: 24px; opacity: 0.6; transition: all 0.5s; }
+        .story-text { font-size: 1.1rem; line-height: 1.7; margin: 20px 0; min-height: 80px; text-align: justify; }
+        
+        /* 按鈕設計 */
+        .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+        button {
+            background-color: #e9c46a; color: #2b2922; border: none; padding: 12px 20px;
+            font-size: 1.05rem; font-weight: bold; border-radius: 10px; cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        button:hover { transform: translateY(-2px); background-color: #f4a261; }
+        .btn-option-a { background-color: #e76f51; color: white; }
+        .btn-option-b { background-color: #2a9d8f; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="storybook-container">
+    <div class="sdg-badge">🌍 SDG 15 陸地生態：守護土壤生物</div>
+    <h2 id="story-title">【大嘴呱呱找新家】</h2>
+    
+    <div class="illustration-stage" id="stage">
+        <div class="trash-item" style="top:30px; left:40px;">🔋</div>
+        <div class="trash-item" style="bottom:50px; right:30px;">🛍️</div>
+        <div class="trash-item" style="top:80px; right:50px;">🍼</div>
+
+        <div id="toxic-cloud" style="position:absolute; width:100%; height:100%; background:rgba(139,195,74,0); transition:all 1s; pointer-events:none; z-index:2;"></div>
+
+        <div class="mealworm" id="worm"></div>
+
+        <div class="frog-digua" id="frog-hero">
+            <div class="frog-eye-left" id="eyeL"></div>
+            <div class="frog-eye-right" id="eyeR"></div>
+            <div class="frog-mouth" id="mouth-box"></div>
+        </div>
+
+        <div class="frog-digua cloned-frog" id="friend1" style="left:30px; bottom:-35px; transform: scale(0.65);">
+            <div class="frog-eye-left"></div>
+            <div class="frog-eye-right"></div>
+            <div class="frog-mouth"></div>
+        </div>
+        
+        <div class="frog-digua cloned-frog" id="friend2" style="right:30px; bottom:-35px; transform: scale(0.65) scaleX(-1);">
+            <div class="frog-eye-left"></div>
+            <div class="frog-eye-right"></div>
+            <div class="frog-mouth"></div>
+        </div>
+    </div>
+
+    <div class="story-text" id="text-box">
+        主角是一隻名叫「地瓜」的角蛙，牠原本住在濕濕的泥炭土中發呆，過著有一餐沒一餐的日子。原本就已經沒有多少食物可以吃了，現在人類還亂丟垃圾、廢棄物，讓土裡充滿各種不能吃且遭受汙染的食物。地瓜實在餓得受不了，不小心吃了髒東西，現在肚子感到非常難受，感覺快鼠掉了……
+    </div>
+
+    <div class="btn-group" id="action-box">
+        <button onclick="goToScene2()">驚覺環境不對勁！幫助地瓜做抉擇 ➔</button>
+    </div>
+</div>
+
+<script>
+    const stage = document.getElementById('stage');
+    const frogHero = document.getElementById('frog-hero');
+    const mouthBox = document.getElementById('mouth-box');
+    const eyeL = document.getElementById('eyeL');
+    const eyeR = document.getElementById('eyeR');
+    const worm = document.getElementById('worm');
+    const toxicCloud = document.getElementById('toxic-cloud');
+    const textBox = document.getElementById('text-box');
+    const actionBox = document.getElementById('action-box');
+    const title = document.getElementById('story-title');
+
+    // 進入第二場景：關鍵抉擇
+    function goToScene2() {
+        stage.style.background = "linear-gradient(to bottom, #5d634f, #2d3321)";
+        title.innerText = "【關鍵抉擇：飢餓的耐力考驗】";
+        textBox.innerHTML = "地瓜摸著咕嚕嚕的肚皮，皮膚沾著髒土好難受，這時眼前突然出現了動靜！請幫牠決定接下來的命運：";
+        
+        actionBox.innerHTML = `
+            <button class="btn-option-a" onclick="startEndingAAnimation()">按鈕 A：【 眼前有蠕動但是充滿毒素的麵包蟲 】</button>
+            <button class="btn-option-b" onclick="startEndingBAnimation()">按鈕 B：【 忍住餓意，堅持與同伴尋找乾淨的泥炭土與水源 】</button>
+        `;
+    }
+
+    // 執行結局 A 動畫：吃蟲 ➔ 中毒 ➔ 翻肚慘死
+    function startEndingAAnimation() {
+        actionBox.innerHTML = `<button style="background:#444; color:#888;" disabled>正在做出抉擇...</button>`;
+        
+        // 1. 麵包蟲爬出來
+        worm.classList.add('worm-crawl');
+        textBox.innerHTML = "<strong>【畫面動作】</strong> 瞧！一隻散發著怪異黃光的麵包蟲在毒土裡蠕動著爬了出來...";
+
+        // 2. 地瓜往前咬 (配合動畫延時)
+        setTimeout(() => {
+            frogHero.classList.add('frog-bite');
+            mouthBox.style.height = "60px"; // 誇張地張開大嘴巴
+            mouthBox.style.borderRadius = "50% 50% 40% 40%";
+            mouthBox.style.background = "#5a1818"; 
+        }, 1200);
+
+        // 3. 蟲消失，大嘴閉合
+        setTimeout(() => {
+            worm.style.display = 'none';
+            mouthBox.style.height = "10px"; // 痛苦閉嘴
+            mouthBox.style.background = "transparent";
+            mouthBox.style.borderRadius = "50%";
+            textBox.innerHTML = "<strong>【畫面動作】</strong> 啪唧！地瓜餓到失去理智，一口把充滿毒素的麵包蟲吞了下去！";
+        }, 2000);
+
+        // 4. 毒發身亡 ➔ 翻肚
+        setTimeout(() => {
+            toxicCloud.style.backgroundColor = "rgba(100, 200, 50, 0.3)"; // 毒氣特效
+            stage.style.background = "linear-gradient(to bottom, #2b1313, #120707)";
+            
+            // 換上死翹翹的叉叉眼
+            eyeL.classList.add('dead-eye');
+            eyeR.classList.add('dead-eye');
+            eyeL.style.fontSize = '18px';
+            eyeR.style.fontSize = '18px';
+            eyeL.innerText = '❌';
+            eyeR.innerText = '❌';
+            
+            // 地瓜整隻旋轉 180 度倒地
+            frogHero.classList.remove('frog-bite');
+            frogHero.classList.add('dead-flip');
+            
+            stage.querySelectorAll('.trash-item').forEach(el => el.style.opacity = '0.2');
+
+            title.innerText = "❌ 悲傷結局：再也醒不來的地瓜";
+            textBox.innerHTML = `
+                <strong style="color:#ff6b6b;">【結局畫面】：</strong> 地瓜吃下毒蟲後，肚子化學毒素發作，痛到拉不出來，痛苦地在髒亂的垃圾土裡打了個滾，最後整隻「翻肚朝天」失去了生命...。<br><br>
+                <strong style="color:#ffbb00;">📢 環境宣導（地瓜臨終前對人類的控訴）：</strong><br>
+                「好痛喔……我的肚子好像要撐爆了……人類為了自己的方便亂丟廢棄物，這些毒素不但害我們生病翻肚，最後也會透過土壤和食物鏈回到人類的肚子裡！請停止土地污染，給彼此一個安全的家！」
+            `;
+            actionBox.innerHTML = `<button onclick="window.location.reload()">🔄 重新復活地瓜，做出對的抉擇！</button>`;
+        }, 2800);
+    }
+
+    // 執行結局 B 動畫：大遷徙 ➔ 複製青蛙部隊集體快樂跳躍
+    function startEndingBAnimation() {
+        actionBox.innerHTML = `<button style="background:#444; color:#888;" disabled>正在遷徙中...</button>`;
+        textBox.innerHTML = "<strong>【畫面動作】</strong> 地瓜看著毒蟲忍住了口水，轉過頭，對著四周發出呱呱聲，叫上了所有的角蛙同伴...";
+
+        setTimeout(() => {
+            // 舞台切換成超美麗乾淨的大自然
+            stage.style.background = "linear-gradient(to bottom, #87ceeb, #2d6a4f)";
+            
+            // 垃圾清除，變成乾淨小草苗
+            stage.querySelectorAll('.trash-item').forEach(item => {
+                item.innerHTML = "🌱";
+                item.style.opacity = "1";
+            });
+
+            title.innerText = "🎉 完美結局：找到無毒的綠色家園！";
+            
+            // 召喚大批地瓜複製蛙同伴登場！
+            const f1 = document.getElementById('friend1');
+            const f2 = document.getElementById('friend2');
+            f1.style.display = 'block';
+            f2.style.display = 'block';
+            
+            // 集體開啟遷徙彈跳動畫
+            frogHero.classList.add('happy-migrate');
+            f1.classList.add('happy-migrate');
+            f2.classList.add('happy-migrate');
+            
+            // 所有青蛙嘴巴張大開心笑
+            document.querySelectorAll('.frog-mouth').forEach(m => {
+                m.style.height = "50px";
+                m.style.borderRadius = "50% 50% 40% 40%";
+                m.style.background = "#a21a1a";
+                m.style.borderBottom = "5px solid #a21a1a";
+            });
+
+            textBox.innerHTML = `
+                <strong style="color:#7fe57f;">【結局畫面】：</strong> 地瓜與牠的同伴們集體大遷徙！成功離開了被污染的髒土。大夥成群結隊、開開心心地找到了全新未受污染的深褐色泥炭土與清澈水源。大家高興地在翠綠植物間瘋狂集體跳躍，快樂地享用真正鮮美健康的無毒麵包蟲！<br><br>
+                <strong style="color:#7fe57f;">💬 永續倡議宣導：</strong><br>
+                「呼！還好我找到了這片沒有被污染的淨土。乾淨的土地和水源對我們呱呱來說就是生命！謝謝你保護陸地生態，讓我們找到這個美麗的新家！」
+            `;
+            
+            actionBox.innerHTML = `<button onclick="window.location.reload()">✨ 再玩一次（學習單完美破關！）</button>`;
+        }, 1500);
+    }
+</script>
+
+</body>
+</html>
